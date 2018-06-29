@@ -78,7 +78,9 @@ int gps_ntp_timeshift = 0;
 
 int spi_snap_time = 200000000;
 
-/****************************************************************************/
+/***************************************************************************
+ * get cpu time
+*/
 int get_Current_Time (void)
 {
 	getnstimeofday(&my_real_cpu_time);
@@ -87,7 +89,9 @@ int get_Current_Time (void)
 	return TRUE;
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Not in use
+*/
 int gps_GPIO_Signal_Detector_HiToLow (void)
 {
 	int wait_counter = 0;
@@ -102,7 +106,9 @@ int gps_GPIO_Signal_Detector_HiToLow (void)
 	return TRUE;
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Sending signal to user space
+ */
 int send_Signal (int pid)
 {
 	int ret;
@@ -132,7 +138,9 @@ int send_Signal (int pid)
 	return TRUE;
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Try to send signal to user space
+*/
 int user_Space_Request_Processing(void)
 {
 	
@@ -145,7 +153,9 @@ int user_Space_Request_Processing(void)
 	return TRUE;
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Interruption triggered by GPIO_IN
+*/
 static irqreturn_t r_irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
  
 	unsigned long flags;
@@ -168,7 +178,9 @@ static irqreturn_t r_irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
    return IRQ_HANDLED;
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Main timer function
+*/
 static enum hrtimer_restart timer_Function (struct hrtimer * unused)
 {
 	int time_delay_nsec = ONE_SECOND;
@@ -216,7 +228,9 @@ static enum hrtimer_restart timer_Function (struct hrtimer * unused)
     return HRTIMER_RESTART;
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Start timer. Default period will be updated inside called function.
+*/
 static void gps_Timer_Init (void)
 {
     hrtimer_init (& htimer, CLOCK_REALTIME, HRTIMER_MODE_REL);
@@ -225,33 +239,37 @@ static void gps_Timer_Init (void)
     hrtimer_start(& htimer, kt_periode, HRTIMER_MODE_REL);
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Stop timer
+*/
 static void gps_Timer_Cleanup (void)
 {
 	hrtimer_cancel(& htimer);
 }
  
-/****************************************************************************/
+/***************************************************************************
+ * Configure GPIO_IN and GPIO_OUT. GPIO_IN triggered by falling signal.
+*/
 void gps_Gpio_Config (void)
 {
 	
    if (gpio_request(GPIO_OUT_GPIO, GPIO_OUT_GPIO_DESC)) {
-      printk("GPIO OUT request faiure: %s\n", GPIO_OUT_GPIO_DESC);
+      printk("GPIO OUT request failure: %s\n", GPIO_OUT_GPIO_DESC);
       return;
    }
   
    if ( (gpio_direction_output(GPIO_OUT_GPIO, 0)) < 0 ) {
-      printk("GPIO OUT set direction faiure: %s\n", GPIO_OUT_GPIO_DESC);
+      printk("GPIO OUT set direction failure: %s\n", GPIO_OUT_GPIO_DESC);
       return;
    }
    
    if (gpio_request(GPIO_IN_GPIO, GPIO_IN_GPIO_DESC)) {
-      printk("GPIO IN request faiure: %s\n", GPIO_IN_GPIO_DESC);
+      printk("GPIO IN request failure: %s\n", GPIO_IN_GPIO_DESC);
       return;
    }
    
    if ( (irq_in_gpio = gpio_to_irq(GPIO_IN_GPIO)) < 0 ) {
-      printk("GPIO to IRQ mapping faiure %s\n", GPIO_IN_GPIO_DESC);
+      printk("GPIO to IRQ mapping failure %s\n", GPIO_IN_GPIO_DESC);
       return;
    }
  
@@ -268,7 +286,9 @@ void gps_Gpio_Config (void)
    
 }
  
-/****************************************************************************/
+/***************************************************************************
+ * Stop using GPIOs. Free GPIO resources.
+*/
 void gps_Gpio_Release(void)
 {
 	free_irq(irq_in_gpio, GPIO_IN_GPIO_DEVICE_DESC);
@@ -276,7 +296,9 @@ void gps_Gpio_Release(void)
 	gpio_free(GPIO_IN_GPIO);
 }
 
-/****************************************************************************/
+/***************************************************************************
+ * Start module. One and only function runs on start.
+*/
 int gps_Init(void)
 {
 	printk(KERN_NOTICE "Starting Real Time Module \n");
@@ -286,7 +308,9 @@ int gps_Init(void)
 	return 0;
 }
  
-/****************************************************************************/
+/***************************************************************************
+ * Stop module. Release resources.
+*/
 void gps_Cleanup(void)
 {
 	gps_Timer_Cleanup();
@@ -297,7 +321,9 @@ void gps_Cleanup(void)
 module_init(gps_Init);
 module_exit(gps_Cleanup);
  
-/****************************************************************************/
+/***************************************************************************
+ * Credentials
+*/
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Slava Nasonov");
 MODULE_DESCRIPTION("GPS 1pps Emulator");
